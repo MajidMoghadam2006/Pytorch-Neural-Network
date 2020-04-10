@@ -3,10 +3,12 @@ from torch import nn, optim
 from torch_models import Dense
 
 class Classifier():
-    def __init__(self, input_size, output_size, hidden_layers, drop_p=0.5):
+    def __init__(self, input_size, output_size, hidden_layers, drop_p=0.5, cuda=False):
         # Define torch dense model
         self.input_size = input_size
         self.model = Dense(input_size, output_size, hidden_layers, drop_p=0.5)
+        if cuda:
+            self.model.cuda()
 
     def compile(self, lr=0.01):
         self.criterion = nn.NLLLoss()
