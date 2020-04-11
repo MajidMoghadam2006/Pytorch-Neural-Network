@@ -37,9 +37,9 @@ class Dense(nn.Module):
         return F.log_softmax(x, dim=1)
     
 # CNN architecture
-class CNN(nn.Module):
+class CIFAR_CNN(nn.Module):
     def __init__(self):
-        super(Net, self).__init__()
+        super(CIFAR_CNN, self).__init__()
         # convolutional layer (sees 32x32x3 image tensor)
         self.conv1 = nn.Conv2d(3, 16, 3, padding=1)
         # convolutional layer (sees 16x16x16 tensor)

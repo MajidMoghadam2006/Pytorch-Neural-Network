@@ -1,21 +1,15 @@
 import torch
 from torch import nn, optim
-from torch_models import Dense, CNN
 
 class Classifier():
-    def __init__(self, hyper_params):
+    def __init__(self, model, criterion, optimizer, cuda=False):
         
-        self.hyper_params = hyper_params
-        
-        if self.hyper_params['model'] == 'dense':
-            self.model = Dense(self.hyper_params)
+        self.model = model
+        self.criterion = criterion
+        self.optimizer = optimizer
          
-        if self.hyper_params['cuda']:
+        if cuda:
             self.model.cuda()
-
-    def compile(self, lr=0.01):
-        self.criterion = nn.NLLLoss()
-        self.optimizer = optim.Adam(self.model.parameters(), lr=lr)
 
     def fit(self, trainloader, testloader=None, epochs=5, print_every=1):
         ''' train on the trainloader dataset and validate on testloader dataset'''
@@ -28,9 +22,9 @@ class Classifier():
                 # Batch training
                 steps += 1
 
-                # Flatten images into a self.input_size long vector => images: batch_size * input_size
-                images.resize_(images.size()[0], self.hyper_params['input_size'])
-
+                # Flatten images into a input_size long vector => images: batch_size * input_size
+                images.resize_(images.size()[0], images.size()[-1]*images.size()[-2])
+                
                 # set grads to zero to avoid accumulating them
                 self.optimizer.zero_grad()
 
@@ -60,7 +54,8 @@ class Classifier():
         accuracy = 0
         test_loss = 0
         for images, labels in testloader:
-            images = images.resize_(images.size()[0], self.hyper_params['input_size'])
+            # Flatten images into a input_size long vector => images: batch_size * input_size
+            images.resize_(images.size()[0], images.size()[-1]*images.size()[-2])
 
             output = self.model.forward(images)
             test_loss += self.criterion(output, labels).item()
