@@ -1,13 +1,16 @@
 import torch
 from torch import nn, optim
-from torch_models import Dense
+from torch_models import Dense, CNN
 
 class Classifier():
-    def __init__(self, input_size, output_size, hidden_layers, drop_p=0.5, cuda=False):
-        # Define torch dense model
-        self.input_size = input_size
-        self.model = Dense(input_size, output_size, hidden_layers, drop_p=0.5)
-        if cuda:
+    def __init__(self, hyper_params):
+        
+        self.hyper_params = hyper_params
+        
+        if self.hyper_params['model'] == 'dense':
+            self.model = Dense(self.hyper_params)
+         
+        if self.hyper_params['cuda']:
             self.model.cuda()
 
     def compile(self, lr=0.01):
@@ -26,7 +29,7 @@ class Classifier():
                 steps += 1
 
                 # Flatten images into a self.input_size long vector => images: batch_size * input_size
-                images.resize_(images.size()[0], self.input_size)
+                images.resize_(images.size()[0], self.hyper_params['input_size'])
 
                 # set grads to zero to avoid accumulating them
                 self.optimizer.zero_grad()
@@ -57,7 +60,7 @@ class Classifier():
         accuracy = 0
         test_loss = 0
         for images, labels in testloader:
-            images = images.resize_(images.size()[0], self.input_size)
+            images = images.resize_(images.size()[0], self.hyper_params['input_size'])
 
             output = self.model.forward(images)
             test_loss += self.criterion(output, labels).item()
