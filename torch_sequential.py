@@ -2,19 +2,20 @@ import torch
 from torch import nn, optim
 
 class Classifier():
-    def __init__(self, model, criterion, optimizer, cuda=False):
+    def __init__(self, model, criterion, optimizer, cuda=False, flatten_input=False):
         
         self.model = model
         self.criterion = criterion
         self.optimizer = optimizer
         self.cuda = cuda
+        self.flatten_input = flatten_input
          
         if self.cuda:
             self.model.cuda()
 
     def fit(self, trainloader, testloader=None, epochs=5, print_every=1):
         ''' train on the trainloader dataset and validate on testloader dataset'''
-        valid_loss_min = float('inf') # track change in validation loss
+        
         steps = 0
         for e in range(epochs):
             # Model in training mode, dropout is on
@@ -30,7 +31,8 @@ class Classifier():
                 steps += 1
 
                 # Flatten images into a input_size long vector => images: batch_size * input_size
-                data.resize_(data.size()[0], data.size()[-1]*data.size()[-2])
+                if self.flatten_input:
+                    data.resize_(data.size()[0], data.size()[-1]*data.size()[-2])
                 
                 # set grads to zero to avoid accumulating them
                 self.optimizer.zero_grad()
@@ -53,7 +55,7 @@ class Classifier():
                     test_loss, accuracy = self.evaluate(testloader)
 
                 print("Epoch: {}/{}.. ".format(e + 1, epochs),
-                      "Training Loss: {:.3f}.. ".format(running_loss / print_every),
+                      "Training Loss: {:.3f}.. ".format(running_loss/len(trainloader)),
                       "Test Loss: {:.3f}.. ".format(test_loss),
                       "Test Accuracy: {:.3f}".format(accuracy))
 
@@ -68,7 +70,8 @@ class Classifier():
                 data, target = data.cuda(), target.cuda()
             
             # Flatten images into a input_size long vector => images: batch_size * input_size
-            data.resize_(data.size()[0], data.size()[-1]*data.size()[-2])
+            if self.flatten_input:
+                data.resize_(data.size()[0], data.size()[-1]*data.size()[-2])
 
             output = self.model.forward(data)
             test_loss += self.criterion(output, target).item()
@@ -92,7 +95,8 @@ class Classifier():
                 data, target = data.cuda(), target.cuda()
             
             # Flatten images into a input_size long vector => images: batch_size * input_size
-            data.resize_(data.size()[0], data.size()[-1]*data.size()[-2])
+            if self.flatten_input:
+                data.resize_(data.size()[0], data.size()[-1]*data.size()[-2])
 
             output = self.model.forward(data)
             test_loss += self.criterion(output, target).item()
